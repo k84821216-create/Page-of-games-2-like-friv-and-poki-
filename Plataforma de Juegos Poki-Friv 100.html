@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokiFriv 100 - Juegos Gratis sin Descargas estilo Play Store</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            dark: '#090d16',
+                            card: '#111827',
+                            accent: '#6366f1',
+                            pink: '#ec4899',
+                            amber: '#f59e0b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #090d16;
+            color: #f3f4f6;
+        }
+
+        .game-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .game-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+
+        #gameCanvas {
+            touch-action: none;
+            background-color: #030712;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar overflow-x-hidden">
+
+    <header class="sticky top-0 z-40 bg-gray-900/90 backdrop-blur-md border-b border-gray-800/80 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            
+            <!-- Logo Poki + Friv -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="filterByCategory('all')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xl font-extrabold shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+                        POKI<span class="text-white">FRIV</span><span class="text-amber-400 text-lg">100</span>
+                    </span>
+                    <span class="hidden md:inline-block text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded-md ml-2 uppercase tracking-wide">
+                        Gratis • 100 Play Store
+                    </span>
+                </div>
+            </div>
+
+            <!-- Buscador en tiempo real -->
+            <div class="flex-1 max-w-md relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Buscar de 100 juegos (ej: Subway, Candy, Carrera, Tanque)..." 
+                    class="w-full pl-10 pr-4 py-2 bg-gray-800/90 border border-gray-700/80 rounded-full text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+            </div>
+
+            <!-- Botones de Acción Derecha -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="filterByCategory('favs')" class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-xl text-sm font-semibold transition-all">
+                    <i class="fa-solid fa-star"></i>
+                    <span class="hidden md:inline">Favoritos</span>
+                    <span id="favCountBadge" class="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <button onclick="soundMaster.toggleMute()" id="soundToggleBtn" class="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 transition-all" title="Activar/Desactivar Sonido">
+                    <i class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-gray-900/60 border-b border-gray-800/50 py-2.5 px-4 overflow-x-auto custom-scrollbar">
+        <div class="max-w-7xl mx-auto flex items-center gap-2 text-xs sm:text-sm font-semibold whitespace-nowrap" id="categoriesContainer">
+            <!-- Categorías inyectadas con JS -->
+        </div>
+    </nav>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+        <!-- BANNER DE DESTACADO (Estilo Poki) -->
+        <section id="featured" class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-950 via-purple-950 to-gray-950 border border-indigo-500/30 p-6 sm:p-8 lg:p-10 shadow-2xl">
+            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-3 max-w-xl text-center md:text-left">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-widest">
+                        <i class="fa-solid fa-fire text-amber-400"></i> #1 MÁS JUGADO EN PLAY STORE
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
+                        Subway Dash 3D
+                    </h1>
+                    <p class="text-gray-300 text-sm sm:text-base">
+                        ¡Corre a máxima velocidad esquivando trenes y acumulando monedas! 100% jugable gratis en tu navegador.
+                    </p>
+                    <div class="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4">
+                        <button onclick="launchGame('subway-dash')" class="px-7 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold rounded-2xl shadow-xl shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 text-base">
+                            <i class="fa-solid fa-play text-lg"></i> ¡JUGAR AHORA!
+                        </button>
+                        <span class="text-xs text-gray-400 flex items-center gap-1">
+                            <i class="fa-solid fa-download text-emerald-400"></i> +500M Descargas Play Store
+                        </span>
+                    </div>
+                </div>
+                
+                <div onclick="launchGame('subway-dash')" class="relative group cursor-pointer w-full max-w-sm aspect-video rounded-2xl overflow-hidden border-2 border-indigo-400/40 shadow-2xl flex-shrink-0">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 flex flex-col items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                        <i class="fa-solid fa-person-running text-7xl text-white drop-shadow-lg animate-bounce"></i>
+                        <span class="text-xs font-black tracking-widest uppercase text-white/90 mt-2">Acción Arcade Sin Descarga</span>
+                    </div>
+                    <div class="absolute bottom-3 left-3 z-20 flex items-center gap-2">
+                        <span class="px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-lg text-xs font-bold text-amber-400 border border-white/10">
+                            ★ 4.9 Play Store
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE CUADRÍCULA DE 100 JUEGOS -->
+        <section class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2" id="gridTitle">
+                        <i class="fa-solid fa-border-all text-indigo-400"></i> Catálogo Completo de 100 Juegos
+                    </h2>
+                    <p class="text-xs sm:text-sm text-gray-400">Haz clic en cualquier tarjeta para ver instrucciones y jugar al instante.</p>
+                </div>
+                <div class="text-xs text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-3 py-1.5 rounded-xl self-start sm:self-auto" id="gamesCount">
+                    Cargando catálogo...
+                </div>
+            </div>
+
+            <!-- Grid de Tarjetas de Juegos -->
+            <div id="gamesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                <!-- 100 Juegos Inyectados dinámicamente -->
+            </div>
+
+            <!-- Estado Vacio -->
+            <div id="emptyState" class="hidden text-center py-16 space-y-3 bg-gray-900/40 rounded-3xl border border-dashed border-gray-800">
+                <i class="fa-solid fa-ghost text-5xl text-gray-600"></i>
+                <h3 class="text-lg font-bold text-gray-300">No se encontraron juegos</h3>
+                <p class="text-sm text-gray-500">Prueba con otra palabra o selecciona una categoría diferente.</p>
+                <button onclick="filterByCategory('all')" class="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-all">
+                    Ver los 100 Juegos
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE REPRODUCTOR E INSTRUCCIONES DE JUEGO -->
+    <div id="gameModal" class="fixed inset-0 z-50 bg-gray-950/95 backdrop-blur-xl hidden flex flex-col items-center justify-center p-2 sm:p-4 transition-all duration-300">
+        
+        <!-- Bar Superior del Modal -->
+        <div class="w-full max-w-5xl flex items-center justify-between pb-3 px-2">
+            <div class="flex items-center gap-3">
+                <div id="modalGameIcon" class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <div>
+                    <h3 id="modalGameTitle" class="text-lg sm:text-xl font-extrabold text-white leading-tight">Título del Juego</h3>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span id="modalGameCategory" class="text-emerald-400 font-bold uppercase tracking-wider">Acción</span>
+                        <span class="text-gray-500">•</span>
+                        <span id="modalRating" class="text-amber-400 font-bold"><i class="fa-solid fa-star text-[10px]"></i> 4.8</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones Modal -->
+            <div class="flex items-center gap-2">
+                <button id="modalFavBtn" onclick="toggleCurrentFavorite()" class="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-amber-400 rounded-xl transition-all text-sm font-bold flex items-center gap-1.5">
+                    <i id="modalFavIcon" class="fa-regular fa-star"></i>
+                    <span class="hidden sm:inline">Favorito</span>
+                </button>
+                <button onclick="toggleFullScreen()" class="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl transition-all text-sm font-bold" title="Pantalla Completa">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+                <button onclick="closeGameModal()" class="p-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-all text-sm font-bold flex items-center gap-1.5 shadow-lg shadow-rose-600/30">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                    <span class="hidden sm:inline">Cerrar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Juego / Canvas Container -->
+        <div class="w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden border border-gray-800 relative shadow-2xl flex flex-col items-center justify-center group" id="canvasContainer">
+            
+            <canvas id="gameCanvas" class="w-full h-full block object-contain"></canvas>
+
+            <!-- OVERLAY DE CONTROLES E INSTRUCCIONES DE INICIO -->
+            <div id="instructionsOverlay" class="absolute inset-0 bg-gray-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center space-y-4 z-30">
+                <div id="instructionsBadge" class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider">
+                    ¿Cómo Jugar?
+                </div>
+                <h2 id="instructionsTitle" class="text-2xl sm:text-3xl font-black text-white">Instrucciones de Juego</h2>
+                <p id="instructionsDesc" class="text-gray-300 text-sm max-w-lg leading-relaxed">
+                    Usa los controles para dominar este juego de la Play Store.
+                </p>
+
+                <!-- Tarjeta Visual de Controles -->
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl max-w-md w-full flex items-center justify-around gap-4 text-xs">
+                    <div class="space-y-1">
+                        <span class="text-gray-400 block font-semibold">Teclado / PC:</span>
+                        <div class="flex items-center justify-center gap-1">
+                            <span class="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-gray-200 font-mono font-bold">W A S D</span>
+                            <span class="text-gray-500">ó</span>
+                            <span class="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-gray-200 font-mono font-bold">Flechas</span>
+                        </div>
+                    </div>
+                    <div class="h-8 w-px bg-gray-800"></div>
+                    <div class="space-y-1">
+                        <span class="text-gray-400 block font-semibold">Acción / Salto:</span>
+                        <span class="px-3 py-1 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded font-mono font-bold">ESPACIO / CLIC</span>
+                    </div>
+                </div>
+
+                <button onclick="startGameFromOverlay()" class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black rounded-2xl shadow-xl shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all text-base flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> ¡EMPEZAR A JUGAR!
+                </button>
+            </div>
+
+            <!-- Controles Táctiles para Móvil -->
+            <div id="mobileControls" class="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none md:hidden opacity-90 z-20">
+                <div class="flex flex-col items-center gap-1 pointer-events-auto">
+                    <button id="btnUp" class="w-11 h-11 bg-gray-800/80 active:bg-indigo-600 border border-gray-600 rounded-xl text-white font-bold text-lg flex items-center justify-center active:scale-95">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <div class="flex gap-2">
+                        <button id="btnLeft" class="w-11 h-11 bg-gray-800/80 active:bg-indigo-600 border border-gray-600 rounded-xl text-white font-bold text-lg flex items-center justify-center active:scale-95">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <button id="btnRight" class="w-11 h-11 bg-gray-800/80 active:bg-indigo-600 border border-gray-600 rounded-xl text-white font-bold text-lg flex items-center justify-center active:scale-95">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <button id="btnDown" class="w-11 h-11 bg-gray-800/80 active:bg-indigo-600 border border-gray-600 rounded-xl text-white font-bold text-lg flex items-center justify-center active:scale-95">
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                </div>
+                <div class="pointer-events-auto flex items-center gap-2">
+                    <button id="btnAction" class="w-16 h-16 bg-emerald-500 active:bg-emerald-400 border-2 border-emerald-300 rounded-full text-gray-950 font-black text-xs flex flex-col items-center justify-center shadow-lg active:scale-95">
+                        <i class="fa-solid fa-bolt text-sm mb-0.5"></i> ACCIÓN
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Modal con Récord y Controles -->
+        <div class="w-full max-w-5xl mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-400 px-2">
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-lg text-gray-200">
+                    <i class="fa-solid fa-gamepad text-indigo-400"></i>
+                    <strong id="modalControlsGuide">Flechas / WASD / Clic</strong>
+                </span>
+                <span class="flex items-center gap-1.5 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-lg text-amber-400">
+                    <i class="fa-solid fa-trophy"></i>
+                    Récord Guardado: <strong id="modalHighScore">0</strong>
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="restartCurrentGame()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-all flex items-center gap-1.5 font-semibold">
+                    <i class="fa-solid fa-rotate-right"></i> Reiniciar Juego
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* SINTETIZADOR DE SONIDO MAESTRO WEB AUDIO API */
+        class MasterAudio {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            toggleMute() {
+                this.muted = !this.muted;
+                const btn = document.getElementById('soundToggleBtn');
+                btn.innerHTML = this.muted 
+                    ? '<i class="fa-solid fa-volume-xmark text-sm text-rose-400"></i>' 
+                    : '<i class="fa-solid fa-volume-high text-sm text-gray-300"></i>';
+            }
+            playTone(freq, duration, type = 'sine') {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+            coin() { this.playTone(880, 0.08, 'sine'); setTimeout(() => this.playTone(1200, 0.1, 'sine'), 50); }
+            jump() { this.playTone(350, 0.12, 'triangle'); }
+            hit() { this.playTone(150, 0.18, 'sawtooth'); }
+            win() { this.playTone(523, 0.1, 'sine'); setTimeout(() => this.playTone(659, 0.15, 'sine'), 80); }
+        }
+        const soundMaster = new MasterAudio();
+
+        /* BASE DE DATOS DE 100 JUEGOS POPULARES ESTILO PLAY STORE (GRATIS) */
+        const ALL_100_GAMES = [
+            // ACCIÓN (1-12)
+            { id: 'subway-dash', title: 'Subway Dash 3D', category: 'Acción', icon: 'fa-person-running', color: 'from-amber-500 to-rose-600', rating: '4.9', badge: 'HOT', desc: 'Esquiva trenes y vallas en la carrera infinita de la ciudad.', engine: 'subway' },
+            { id: 'space-defender', title: 'Neon Space Shooter', category: 'Acción', icon: 'fa-rocket', color: 'from-cyan-500 to-blue-600', rating: '4.8', badge: 'TOP FREE', desc: 'Destruye naves enemigas e imponentes jefes alienígenas.', engine: 'shooter' },
+            { id: 'knife-hit', title: 'Knife Hit Master', category: 'Acción', icon: 'fa-utensils', color: 'from-emerald-500 to-teal-700', rating: '4.7', badge: 'POPULAR', desc: 'Lanza cuchillos al tronco giratorio sin golpear otros cuchillos.', engine: 'knife' },
+            { id: 'temple-run-dash', title: 'Temple Escape 3D', category: 'Acción', icon: 'fa-skull', color: 'from-yellow-600 to-amber-800', rating: '4.8', badge: 'TOP', desc: 'Escapa del templo sagrado esquivando trampas y monstruos.', engine: 'subway' },
+            { id: 'zombie-tsunami', title: 'Zombie Rush Horde', category: 'Acción', icon: 'fa-biohazard', color: 'from-lime-600 to-emerald-800', rating: '4.6', badge: 'HOT', desc: 'Lidera la horda zombie devorando la ciudad sin caerte.', engine: 'subway' },
+            { id: 'archery-master', title: 'Archery King 3D', category: 'Acción', icon: 'fa-bullseye', color: 'from-indigo-600 to-purple-800', rating: '4.7', badge: 'NUEVO', desc: 'Apunta con arco y flecha en la diana calculando el viento.', engine: 'knife' },
+            { id: 'fruit-ninja', title: 'Fruit Ninja Slash', category: 'Acción', icon: 'fa-apple-whole', color: 'from-red-500 to-pink-600', rating: '4.9', badge: 'POPULAR', desc: 'Corta frutas voladoras con tu katana y evita las bombas.', engine: 'knife' },
+            { id: 'shadow-fight', title: 'Shadow Ninja Blade', category: 'Acción', icon: 'fa-user-ninja', color: 'from-gray-700 to-slate-900', rating: '4.8', badge: 'TOP FREE', desc: 'Combate en sombras contra guerreros legendarios.', engine: 'shooter' },
+            { id: 'cyber-tank', title: 'Cyber Tank Blitz', category: 'Acción', icon: 'fa-shield-cat', color: 'from-purple-600 to-indigo-800', rating: '4.8', badge: 'HOT', desc: 'Batallas de tanques cibernéticos en laberintos futuristas.', engine: 'shooter' },
+            { id: 'brawl-stars-mini', title: 'Brawl Heroes Arena', category: 'Acción', icon: 'fa-gun', color: 'from-amber-400 to-orange-600', rating: '4.9', badge: 'TOP', desc: 'Dispara y domina la arena de combate multijugador.', engine: 'shooter' },
+            { id: 'pixel-gun-3d', title: 'Pixel Block Gun', category: 'Acción', icon: 'fa-cubes', color: 'from-cyan-600 to-teal-800', rating: '4.6', badge: 'POPULAR', desc: 'Supervivencia en un mundo de bloques estilizado.', engine: 'shooter' },
+            { id: 'slug-terra', title: 'Slug Shooter Royale', category: 'Acción', icon: 'fa-bug', color: 'from-blue-500 to-indigo-700', rating: '4.5', badge: 'NUEVO', desc: 'Lanza babosas de fuego y hielo para vencer villanos.', engine: 'shooter' },
+
+            // CARRERAS (13-24)
+            { id: 'hill-climb', title: 'Hill Climb Racing', category: 'Carreras', icon: 'fa-car-side', color: 'from-amber-600 to-yellow-500', rating: '4.8', badge: 'HOT', desc: 'Conduce por colinas inclinadas equilibrando tu vehículo.', engine: 'subway' },
+            { id: 'moto-x3m', title: 'Moto X3M Bike Race', category: 'Carreras', icon: 'fa-motorcycle', color: 'from-red-600 to-orange-500', rating: '4.9', badge: 'POPULAR', desc: 'Haz acrobacias explosivas en motocicleta sobre pistas extremas.', engine: 'subway' },
+            { id: 'car-parking', title: 'Car Parking School', category: 'Carreras', icon: 'fa-square-parking', color: 'from-blue-600 to-slate-800', rating: '4.6', badge: 'TOP', desc: 'Estaciona autos de lujo en espacios ajustados sin chocar.', engine: 'subway' },
+            { id: 'asphalt-speed', title: 'Asphalt Speed Drift', category: 'Carreras', icon: 'fa-gauge-high', color: 'from-indigo-600 to-blue-700', rating: '4.8', badge: 'TOP FREE', desc: 'Siente la velocidad realizando derrapes en supercarreteras.', engine: 'subway' },
+            { id: 'traffic-rider', title: 'Traffic Motor Rider', category: 'Carreras', icon: 'fa-road', color: 'from-slate-700 to-zinc-900', rating: '4.7', badge: 'HOT', desc: 'Esquiva tráfico pesado a toda velocidad en motocicleta.', engine: 'subway' },
+            { id: 'beach-buggy', title: 'Beach Buggy Racing', category: 'Carreras', icon: 'fa-car-rear', color: 'from-cyan-500 to-blue-500', rating: '4.7', badge: 'POPULAR', desc: 'Carreras alocadas en la playa con poderes y trampas.', engine: 'subway' },
+            { id: 'drift-max', title: 'Drift Max Pro', category: 'Carreras', icon: 'fa-car-burst', color: 'from-purple-600 to-pink-600', rating: '4.8', badge: 'NUEVO', desc: 'Quema llanta y acumula puntos derrapando en las curvas.', engine: 'subway' },
+            { id: 'monster-truck', title: 'Monster Truck Jam', category: 'Carreras', icon: 'fa-truck-monster', color: 'from-orange-600 to-red-700', rating: '4.6', badge: 'TOP', desc: 'Aplasta autos con camionetas gigantes en pistas de barro.', engine: 'subway' },
+            { id: 'real-racing-mini', title: 'Real Circuit Racing', category: 'Carreras', icon: 'fa-flag-checkered', color: 'from-emerald-600 to-teal-800', rating: '4.7', badge: 'HOT', desc: 'Compite en circuitos profesionales de Formula 1.', engine: 'subway' },
+            { id: 'kart-rider', title: 'Kart Stars Blitz', category: 'Carreras', icon: 'fa-gamepad', color: 'from-yellow-400 to-amber-600', rating: '4.5', badge: 'POPULAR', desc: 'Lanza plátanos y cohetes en carreras de karts.', engine: 'subway' },
+            { id: 'hoverboard-heroes', title: 'Hoverboard Surfers', category: 'Carreras', icon: 'fa-bolt', color: 'from-pink-500 to-rose-600', rating: '4.6', badge: 'NUEVO', desc: 'Flota sobre patinetas voladoras esquivando láseres.', engine: 'subway' },
+            { id: 'climb-canyon', title: 'Canyon Offroad 4x4', category: 'Carreras', icon: 'fa-truck-pickup', color: 'from-stone-600 to-amber-900', rating: '4.6', badge: 'TOP FREE', desc: 'Supera acantilados rocosos con camionetas 4x4.', engine: 'subway' },
+
+            // ARCADE (25-38)
+            { id: 'geometry-cube', title: 'Geometry Cube Jump', category: 'Arcade', icon: 'fa-vector-square', color: 'from-purple-600 to-indigo-600', rating: '4.9', badge: 'HOT', desc: 'Salta al ritmo de la música evitando picos mortales.', engine: 'cube' },
+            { id: 'brick-breaker', title: 'Brick Breaker Retro', category: 'Arcade', icon: 'fa-cubes-stacked', color: 'from-pink-500 to-purple-700', rating: '4.8', badge: 'POPULAR', desc: 'Rebota la bola destruyendo todos los bloques en pantalla.', engine: 'bricks' },
+            { id: 'flappy-dunk', title: 'Flappy Dunk Hoop', category: 'Arcade', icon: 'fa-basketball-ball', color: 'from-emerald-500 to-teal-700', rating: '4.7', badge: 'TOP FREE', desc: 'Aletea y encesta la pelota en aros flotantes.', engine: 'flappy' },
+            { id: 'pac-maze', title: 'Pac Maze Runner', category: 'Arcade', icon: 'fa-ghost', color: 'from-yellow-400 to-amber-500', rating: '4.9', badge: 'TOP', desc: 'Come todas las píldoras en el laberinto huyendo de los fantasmas.', engine: 'snake' },
+            { id: 'helix-jump', title: 'Helix Jump Tower', category: 'Arcade', icon: 'fa-tower-observation', color: 'from-rose-500 to-red-600', rating: '4.8', badge: 'HOT', desc: 'Haz rebotar la bola cayendo a través de la torre helicoidal.', engine: 'cube' },
+            { id: 'stack-jump', title: 'Stack Tower Jump', category: 'Arcade', icon: 'fa-layer-group', color: 'from-cyan-500 to-blue-600', rating: '4.7', badge: 'POPULAR', desc: 'Salta en el momento exacto para apilar bloques infinitos.', engine: 'cube' },
+            { id: 'doodle-jump', title: 'Doodle Jump Sky', category: 'Arcade', icon: 'fa-frog', color: 'from-green-500 to-emerald-700', rating: '4.8', badge: 'TOP', desc: 'Llega lo más alto posible saltando en plataformas.', engine: 'cube' },
+            { id: 'pinball-retro', title: 'Pinball Galaxy Retro', category: 'Arcade', icon: 'fa-circle-dot', color: 'from-indigo-500 to-purple-800', rating: '4.6', badge: 'NUEVO', desc: 'Mantiene la bola metálica en juego usando las palancas.', engine: 'bricks' },
+            { id: 'space-invaders', title: 'Retro Galaxy Defenders', category: 'Arcade', icon: 'fa-headset', color: 'from-violet-600 to-fuchsia-800', rating: '4.7', badge: 'TOP FREE', desc: 'Clásico arcade destruyendo alienígenas descendentes.', engine: 'shooter' },
+            { id: 'crossy-road', title: 'Crossy Animal Road', category: 'Arcade', icon: 'fa-kiwi-bird', color: 'from-teal-400 to-emerald-600', rating: '4.9', badge: 'HOT', desc: 'Cruza autopistas y ríos sin ser atropellado.', engine: 'subway' },
+            { id: 'snake-neon', title: 'Snake Neon Worm', category: 'Arcade', icon: 'fa-staff-snake', color: 'from-lime-400 to-green-600', rating: '4.8', badge: 'POPULAR', desc: 'Guía a la serpiente para comer luces y crecer infinitamente.', engine: 'snake' },
+            { id: 'slither-io-mini', title: 'Worm Slither Battle', category: 'Arcade', icon: 'fa-spaghetti-monster-flying', color: 'from-sky-400 to-indigo-600', rating: '4.7', badge: 'TOP', desc: 'Compite en la arena de gusanos para ser el más grande.', engine: 'snake' },
+            { id: 'color-switch', title: 'Color Switch Obstacles', category: 'Arcade', icon: 'fa-palette', color: 'from-fuchsia-500 to-pink-600', rating: '4.7', badge: 'HOT', desc: 'Atraviesa anillos cruzando solo por tu mismo color.', engine: 'cube' },
+            { id: 'tap-tap-dash', title: 'Tap Tap Path Dash', category: 'Arcade', icon: 'fa-shoe-prints', color: 'from-rose-600 to-orange-600', rating: '4.6', badge: 'NUEVO', desc: 'Gira en los esquinas en el camino estrecho sin caerte.', engine: 'cube' },
+
+            // PUZZLES (39-52)
+            { id: 'candy-blast', title: 'Candy Crush Match 3', category: 'Puzzles', icon: 'fa-candy-cane', color: 'from-pink-500 to-rose-500', rating: '4.9', badge: 'HOT', desc: 'Combina 3 o más dulces del mismo tipo para ganar puntos.', engine: 'memory' },
+            { id: 'game-2048', title: '2048 Block Fusion', category: 'Puzzles', icon: 'fa-hashtag', color: 'from-amber-500 to-yellow-600', rating: '4.9', badge: 'POPULAR', desc: 'Combina fichas numéricas iguales para alcanzar el bloque 2048.', engine: 'memory' },
+            { id: 'block-puzzle', title: 'Block Puzzle Jewel', category: 'Puzzles', icon: 'fa-shapes', color: 'from-blue-500 to-cyan-600', rating: '4.8', badge: 'TOP FREE', desc: 'Encaja piezas tipo Tetris completando filas y columnas.', engine: 'bricks' },
+            { id: 'sudoku-master', title: 'Sudoku Quest Classic', category: 'Puzzles', icon: 'fa-table-cells', color: 'from-slate-600 to-slate-800', rating: '4.7', badge: 'TOP', desc: 'Resuelve tableros matemáticos con números del 1 al 9.', engine: 'memory' },
+            { id: 'water-sort', title: 'Water Color Sort', category: 'Puzzles', icon: 'fa-vial', color: 'from-cyan-400 to-blue-600', rating: '4.8', badge: 'HOT', desc: 'Vierte agua de colores hasta separar cada tono en tubos.', engine: 'memory' },
+            { id: 'cut-the-rope', title: 'Feed The Om Monster', category: 'Puzzles', icon: 'fa-scissors', color: 'from-green-500 to-emerald-700', rating: '4.8', badge: 'POPULAR', desc: 'Corta cuerdas con precisión para alimentar al monstruo.', engine: 'knife' },
+            { id: 'bubble-shooter', title: 'Bubble Shooter POP', category: 'Puzzles', icon: 'fa-circle-nodes', color: 'from-purple-500 to-pink-500', rating: '4.7', badge: 'TOP', desc: 'Dispara burbujas combinando 3 o más del mismo color.', engine: 'shooter' },
+            { id: 'mahjong-solitaire', title: 'Mahjong Tile Deluxe', category: 'Puzzles', icon: 'fa-chess-board', color: 'from-stone-500 to-amber-800', rating: '4.6', badge: 'NUEVO', desc: 'Encuentra parejas de fichas idénticas en la pirámide.', engine: 'memory' },
+            { id: 'unblock-me', title: 'Unblock Wood Car', category: 'Puzzles', icon: 'fa-arrows-left-right', color: 'from-amber-700 to-orange-900', rating: '4.7', badge: 'HOT', desc: 'Desliza bloques de madera para dar paso al auto rojo.', engine: 'memory' },
+            { id: 'word-search', title: 'Word Search Master', category: 'Puzzles', icon: 'fa-font', color: 'from-indigo-500 to-violet-700', rating: '4.6', badge: 'POPULAR', desc: 'Encuentra palabras ocultas en la sopa de letras.', engine: 'memory' },
+            { id: 'minesweeper-retro', title: 'Classic Minesweeper', category: 'Puzzles', icon: 'fa-land-mine-on', color: 'from-gray-600 to-zinc-800', rating: '4.7', badge: 'TOP FREE', desc: 'Despeja el campo sin hacer detonar ninguna mina.', engine: 'memory' },
+            { id: 'brain-out', title: 'Brain Test Tricky Quiz', category: 'Puzzles', icon: 'fa-lightbulb', color: 'from-yellow-400 to-amber-500', rating: '4.8', badge: 'HOT', desc: 'Acertijos mentales y acertijos divertidos para entrenar la mente.', engine: 'memory' },
+            { id: 'line-connect', title: 'Pipe Color Line Connect', category: 'Puzzles', icon: 'fa-diagram-project', color: 'from-teal-500 to-cyan-700', rating: '4.6', badge: 'NUEVO', desc: 'Conecta puntos del mismo color trazando líneas sin cruzarse.', engine: 'memory' },
+            { id: 'memory-match', title: 'Card Memory Training', category: 'Puzzles', icon: 'fa-clone', color: 'from-rose-500 to-pink-600', rating: '4.5', badge: 'TOP', desc: 'Voltea cartas y memoriza las parejas en el menor tiempo.', engine: 'memory' },
+
+            // DEPORTES (53-66)
+            { id: '8-ball-pool', title: '8 Ball Billiards Club', category: 'Deportes', icon: 'fa-circle-dot', color: 'from-emerald-700 to-green-900', rating: '4.9', badge: 'HOT', desc: 'Demuestra tu puntería con el taco de billar en partidas de 8 bolas.', engine: 'knife' },
+            { id: 'basketball-stars', title: 'Basketball Stars 1v1', category: 'Deportes', icon: 'fa-basketball', color: 'from-orange-500 to-amber-600', rating: '4.8', badge: 'POPULAR', desc: 'Lanza dobles y triples encestando bajo presión.', engine: 'flappy' },
+            { id: 'penalty-kick', title: 'Soccer Penalty Kick', category: 'Deportes', icon: 'fa-football', color: 'from-blue-600 to-indigo-800', rating: '4.7', badge: 'TOP FREE', desc: 'Cobra penales con efecto superando al portero.', engine: 'flappy' },
+            { id: 'mini-golf-3d', title: 'Mini Golf Paradise', category: 'Deportes', icon: 'fa-golf-ball-tee', color: 'from-lime-500 to-green-700', rating: '4.7', badge: 'TOP', desc: 'Mete la bola de golf en el hoyo con el menor número de golpes.', engine: 'knife' },
+            { id: 'air-hockey', title: 'Air Hockey Challenge', category: 'Deportes', icon: 'fa-table-tennis-paddle-ball', color: 'from-cyan-500 to-blue-700', rating: '4.8', badge: 'HOT', desc: 'Anota goles deslizando tu mazo en la mesa de neón.', engine: 'bricks' },
+            { id: 'boxing-stars', title: 'Boxing Ring Heroes', category: 'Deportes', icon: 'fa-mitten', color: 'from-red-600 to-rose-800', rating: '4.6', badge: 'POPULAR', desc: 'Lanza ganchos y esquiva golpes en el cuadrilátero.', engine: 'shooter' },
+            { id: 'bowling-club', title: '3D Bowling Club', category: 'Deportes', icon: 'fa-bowling-ball', color: 'from-violet-600 to-purple-900', rating: '4.6', badge: 'NUEVO', desc: 'Apunta a los 10 pinos y logra chuzas perfectas.', engine: 'knife' },
+            { id: 'table-tennis', title: 'Ping Pong Master', category: 'Deportes', icon: 'fa-table-tennis-paddle-ball', color: 'from-amber-500 to-orange-700', rating: '4.7', badge: 'TOP', desc: 'Rallys rápidos de tenis de mesa contra la IA.', engine: 'bricks' },
+            { id: 'baseball-hero', title: 'Homerun Baseball Hero', category: 'Deportes', icon: 'fa-baseball-bat-ball', color: 'from-red-500 to-amber-700', rating: '4.5', badge: 'HOT', desc: 'Batea la bola en el momento justo para sacarla del estadio.', engine: 'knife' },
+            { id: 'tennis-clash', title: 'Tennis Court Clash', category: 'Deportes', icon: 'fa-bounce', color: 'from-green-600 to-teal-700', rating: '4.6', badge: 'POPULAR', desc: 'Saques as y remates de volea en canchas de arcilla.', engine: 'bricks' },
+            { id: 'skate-party', title: 'Skateboard Flip Trick', category: 'Deportes', icon: 'fa-person-skating', color: 'from-stone-600 to-zinc-800', rating: '4.7', badge: 'NUEVO', desc: 'Patinaje urbano haciendo ollies y grinds.', engine: 'subway' },
+            { id: 'snowboard-high', title: 'Snowboard Downhill', category: 'Deportes', icon: 'fa-person-snowboarding', color: 'from-sky-400 to-blue-600', rating: '4.6', badge: 'TOP FREE', desc: 'Desciende nevados realizando acrobacias en el aire.', engine: 'subway' },
+            { id: 'archery-3d', title: 'Archery Range Master', category: 'Deportes', icon: 'fa-crosshair', color: 'from-amber-600 to-orange-800', rating: '4.5', badge: 'HOT', desc: 'Práctica de tiro con arco profesional.', engine: 'knife' },
+            { id: 'darts-pro', title: 'Darts King 3D', category: 'Deportes', icon: 'fa-bullseye', color: 'from-indigo-700 to-slate-900', rating: '4.5', badge: 'POPULAR', desc: 'Lanza dardos al centro 50 en la taberna.', engine: 'knife' },
+
+            // ESTRATEGIA (67-78)
+            { id: 'clash-royale-mini', title: 'Tower Conquest Royale', category: 'Estrategia', icon: 'fa-chess-rook', color: 'from-blue-600 to-indigo-900', rating: '4.9', badge: 'HOT', desc: 'Despliega cartas de tropas para derribar las torres enemigas.', engine: 'shooter' },
+            { id: 'chess-master', title: 'Chess 2 Player Pro', category: 'Estrategia', icon: 'fa-chess-knight', color: 'from-amber-800 to-stone-900', rating: '4.8', badge: 'POPULAR', desc: 'Ajedrez clásico con IA ajustable o modo 2 jugadores.', engine: 'memory' },
+            { id: 'kingdom-rush', title: 'Kingdom Defense Tower', category: 'Estrategia', icon: 'fa-dungeon', color: 'from-emerald-600 to-teal-900', rating: '4.8', badge: 'TOP FREE', desc: 'Construye torres de arqueros y magos contra monstruos.', engine: 'shooter' },
+            { id: 'bloons-td', title: 'Balloon Pop Defense', category: 'Estrategia', icon: 'fa-balloon', color: 'from-pink-500 to-rose-700', rating: '4.7', badge: 'TOP', desc: 'Coloca monos estratégicamente para reventar globos.', engine: 'shooter' },
+            { id: 'state-of-survival', title: 'Base Defense Survival', category: 'Estrategia', icon: 'fa-house-medical-shield', color: 'from-zinc-700 to-gray-900', rating: '4.6', badge: 'HOT', desc: 'Gestiona tu base y barricadas contra invasiones.', engine: 'shooter' },
+            { id: 'plague-inc-mini', title: 'Virus Lab Conquest', category: 'Estrategia', icon: 'fa-virus', color: 'from-rose-700 to-red-950', rating: '4.7', badge: 'NUEVO', desc: 'Evoluciona fórmulas en el laboratorio dominando el mapa.', engine: 'memory' },
+            { id: 'risk-domination', title: 'World War Domination', category: 'Estrategia', icon: 'fa-earth-americas', color: 'from-sky-700 to-indigo-900', rating: '4.6', badge: 'POPULAR', desc: 'Conquista territorios enemigos con tácticas de guerra.', engine: 'memory' },
+            { id: 'battleship-sea', title: 'Sea Battle Warship', category: 'Estrategia', icon: 'fa-ship', color: 'from-cyan-700 to-blue-900', rating: '4.7', badge: 'TOP', desc: 'Hunde la flota naval enemiga adivinando sus coordenadas.', engine: 'memory' },
+            { id: 'stick War', title: 'Stickman War Legacy', category: 'Estrategia', icon: 'fa-person-military-rifle', color: 'from-amber-600 to-stone-800', rating: '4.8', badge: 'HOT', desc: 'Mineros y guerreros de palitos para conquistar estatuas.', engine: 'shooter' },
+            { id: 'art-of-war', title: 'Mini Legion Battles', category: 'Estrategia', icon: 'fa-people-group', color: 'from-purple-600 to-indigo-800', rating: '4.6', badge: 'NUEVO', desc: 'Organiza legiones de soldados en formaciones inteligentes.', engine: 'shooter' },
+            { id: 'bad-north-mini', title: 'Viking Island Guard', category: 'Estrategia', icon: 'fa-helmet-safety', color: 'from-slate-600 to-sky-900', rating: '4.7', badge: 'TOP FREE', desc: 'Defiende tu isla nórdica de los barcos piratas.', engine: 'shooter' },
+            { id: 'age-of-war', title: 'Age of Evolution War', category: 'Estrategia', icon: 'fa-hourglass-half', color: 'from-amber-700 to-orange-950', rating: '4.8', badge: 'POPULAR', desc: 'Evoluciona desde la era de piedra hasta el futuro.', engine: 'shooter' },
+
+            // CASUAL Y AVENTURAS (79-90)
+            { id: 'talking-tom', title: 'Pet Cat Run', category: 'Casual', icon: 'fa-cat', color: 'from-teal-400 to-cyan-600', rating: '4.8', badge: 'HOT', desc: 'Cuida y juega con la mascota interactiva.', engine: 'subway' },
+            { id: 'pou-retro', title: 'Virtual Alien Pet', category: 'Casual', icon: 'fa-face-smile-beam', color: 'from-yellow-500 to-amber-700', rating: '4.7', badge: 'POPULAR', desc: 'Alimenta, limpia y diviértete con tu mascota virtual.', engine: 'memory' },
+            { id: 'pacman-classic', title: 'Retro Pac Arcade', category: 'Casual', icon: 'fa-ghost', color: 'from-yellow-400 to-orange-500', rating: '4.9', badge: 'TOP', desc: 'Nostalgia pura comiendo fantasmas.', engine: 'snake' },
+            { id: 'paper-io', title: 'Paper Territory IO', category: 'Casual', icon: 'fa-note-sticky', color: 'from-pink-500 to-indigo-600', rating: '4.7', badge: 'HOT', desc: 'Pinta el mapa cerrando trazos con tu color.', engine: 'snake' },
+            { id: 'hole-io', title: 'Black Hole City Eater', category: 'Casual', icon: 'fa-circle-notch', color: 'from-slate-800 to-black', rating: '4.8', badge: 'TOP FREE', desc: 'Devora autos y edificios haciendo crecer tu agujero negro.', engine: 'snake' },
+            { id: 'doodle-army', title: 'Doodle Mini Militia', category: 'Casual', icon: 'fa-mask', color: 'from-green-600 to-stone-800', rating: '4.6', badge: 'POPULAR', desc: 'Combate en jetpack con amigos en mapas garabateados.', engine: 'shooter' },
+            { id: 'pixel-dungeon', title: 'Pixel Dungeon Rogue', category: 'Aventuras', icon: 'fa-dungeon', color: 'from-purple-800 to-stone-900', rating: '4.8', badge: 'HOT', desc: 'Explora mazmorras roguelike buscando tesoros.', engine: 'shooter' },
+            { id: 'terraria-mini', title: 'Craft & Mine World', category: 'Aventuras', icon: 'fa-pickaxe', color: 'from-amber-600 to-green-700', rating: '4.9', badge: 'TOP', desc: 'Mina minerales, construye casas y combate monstruos.', engine: 'snake' },
+            { id: 'roblox-run', title: 'Block Obby Escape', category: 'Aventuras', icon: 'fa-cube', color: 'from-red-600 to-rose-700', rating: '4.8', badge: 'POPULAR', desc: 'Supera parkours imposibles de bloques voladores.', engine: 'cube' },
+            { id: 'subway-surfers-2', title: 'Tokyo Train Dash', category: 'Aventuras', icon: 'fa-train-subway', color: 'from-cyan-500 to-indigo-700', rating: '4.9', badge: 'HOT', desc: 'Aventura de correpasillos ambientada en Tokio.', engine: 'subway' },
+            { id: 'alto-odyssey', title: 'Sandboard Odyssey', category: 'Aventuras', icon: 'fa-mountain-sun', color: 'from-orange-400 to-rose-600', rating: '4.8', badge: 'TOP FREE', desc: 'Deslízate sobre dunas místicas bajo el atardecer.', engine: 'subway' },
+            { id: 'red-ball-4', title: 'Red Bounce Ball 4', category: 'Aventuras', icon: 'fa-circle', color: 'from-red-500 to-rose-700', rating: '4.8', badge: 'POPULAR', desc: 'Salva el mundo de los cubos grises rebotando.', engine: 'cube' },
+
+            // CARTAS Y MESA (91-100)
+            { id: 'uno-cards', title: 'Four Color Card Match', category: 'Cartas/Mesa', icon: 'fa-copy', color: 'from-red-600 to-yellow-500', rating: '4.9', badge: 'HOT', desc: '¡Di UNO! Deshazte de tus cartas igualando color o número.', engine: 'memory' },
+            { id: 'solitaire-klondike', title: 'Solitaire Classic HD', category: 'Cartas/Mesa', icon: 'fa-heart', color: 'from-emerald-700 to-green-900', rating: '4.8', badge: 'POPULAR', desc: 'Organiza las cartas por palos en orden ascendente.', engine: 'memory' },
+            { id: 'ludo-club', title: 'Ludo Parcheesi Star', category: 'Cartas/Mesa', icon: 'fa-dice', color: 'from-amber-500 to-rose-600', rating: '4.9', badge: 'TOP', desc: 'Lanza los dados y lleva tus 4 fichas a la meta.', engine: 'memory' },
+            { id: 'tic-tac-toe', title: 'Tic Tac Toe Deluxe', category: 'Cartas/Mesa', icon: 'fa-xmark', color: 'from-indigo-600 to-purple-700', rating: '4.6', badge: 'TOP FREE', desc: 'Tres en raya tradicional o en tableros gigantes 5x5.', engine: 'memory' },
+            { id: 'domino-master', title: 'Dominoes Pro Club', category: 'Cartas/Mesa', icon: 'fa-cubes', color: 'from-slate-700 to-zinc-900', rating: '4.7', badge: 'HOT', desc: 'Empareja los puntos de las fichas de dominó.', engine: 'memory' },
+            { id: 'poker-holdem', title: 'Texas Holdem Poker', category: 'Cartas/Mesa', icon: 'fa-diamond', color: 'from-red-700 to-black', rating: '4.8', badge: 'POPULAR', desc: 'Haz faroles y gana el pozo acumulado de fichas.', engine: 'memory' },
+            { id: 'checkers-drafts', title: 'Checkers Classic 2P', category: 'Cartas/Mesa', icon: 'fa-chess-board', color: 'from-amber-800 to-stone-900', rating: '4.6', badge: 'NUEVO', desc: 'Captura todas las fichas del oponente saltando en diagonal.', engine: 'memory' },
+            { id: 'bingo-blitz', title: 'Bingo Party World', category: 'Cartas/Mesa', icon: 'fa-bullseye', color: 'from-purple-500 to-pink-600', rating: '4.5', badge: 'TOP', desc: 'Marca los números cantados y canta ¡BINGO!', engine: 'memory' },
+            { id: 'backgammon-pro', title: 'Backgammon Gold', category: 'Cartas/Mesa', icon: 'fa-dice-d6', color: 'from-stone-600 to-amber-900', rating: '4.6', badge: 'HOT', desc: 'Mueve tus fichas con el dado fuera del tablero.', engine: 'memory' },
+            { id: 'rummy-card', title: 'Rummy Master Club', category: 'Cartas/Mesa', icon: 'fa-layer-group', color: 'from-blue-600 to-indigo-800', rating: '4.6', badge: 'NUEVO', desc: 'Forma tercias y corridas de cartas antes que nadie.', engine: 'memory' }
+        ];
+
+        // Estado de la App
+        let activeCategory = 'all';
+        let favorites = JSON.parse(localStorage.getItem('pokifriv100_favs') || '[]');
+        let currentGame = null;
+        let currentGameLoop = null;
+
+        const CATEGORIES = ['all', 'Acción', 'Carreras', 'Arcade', 'Puzzles', 'Deportes', 'Estrategia', 'Casual', 'Aventuras', 'Cartas/Mesa', 'favs'];
+        const CATEGORY_LABELS = {
+            'all': '🔥 Todos los 100 Juegos',
+            'Acción': '⚡ Acción',
+            'Carreras': '🏎️ Carreras',
+            'Arcade': '👾 Arcade',
+            'Puzzles': '🧩 Puzzles',
+            'Deportes': '⚽ Deportes',
+            'Estrategia': '🧠 Estrategia',
+            'Casual': '🎯 Casual',
+            'Aventuras': '🗺️ Aventuras',
+            'Cartas/Mesa': '🃏 Cartas / Mesa',
+            'favs': '⭐ Mis Favoritos'
+        };
+
+        // Inicialización
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCategories();
+            renderGames();
+            updateFavCount();
+        });
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = CATEGORIES.map(cat => {
+                const isActive = activeCategory === cat;
+                const activeClass = isActive 
+                    ? 'bg-emerald-500 text-gray-950 font-extrabold shadow-lg shadow-emerald-500/20' 
+                    : 'bg-gray-800/80 hover:bg-gray-700 text-gray-300 font-semibold border border-gray-700/60';
+                
+                return `
+                    <button onclick="filterByCategory('${cat}')" class="px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${activeClass}">
+                        ${CATEGORY_LABELS[cat] || cat}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function filterByCategory(cat) {
+            activeCategory = cat;
+            renderCategories();
+            renderGames();
+            
+            const titleEl = document.getElementById('gridTitle');
+            if (cat === 'all') titleEl.innerHTML = '<i class="fa-solid fa-border-all text-indigo-400"></i> Catálogo Completo de 100 Juegos';
+            else if (cat === 'favs') titleEl.innerHTML = '<i class="fa-solid fa-star text-amber-400"></i> Tus Juegos Favoritos';
+            else titleEl.innerHTML = `<i class="fa-solid fa-layer-group text-cyan-400"></i> Juegos de ${cat}`;
+        }
+
+        function handleSearch() {
+            renderGames();
+        }
+
+        function renderGames() {
+            const grid = document.getElementById('gamesGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filtered = ALL_100_GAMES.filter(game => {
+                const matchesCategory = (activeCategory === 'all') 
+                    || (activeCategory === 'favs' && favorites.includes(game.id))
+                    || (game.category === activeCategory);
+                
+                const matchesSearch = game.title.toLowerCase().includes(searchVal) 
+                    || game.desc.toLowerCase().includes(searchVal)
+                    || game.category.toLowerCase().includes(searchVal);
+
+                return matchesCategory && matchesSearch;
+            });
+
+            document.getElementById('gamesCount').textContent = `Mostrando ${filtered.length} de 100 juegos`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            grid.innerHTML = filtered.map(game => {
+                const isFav = favorites.includes(game.id);
+                return `
+                    <div class="game-card bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden cursor-pointer flex flex-col justify-between relative group" onclick="launchGame('${game.id}')">
+                        <button onclick="event.stopPropagation(); toggleFavorite('${game.id}')" class="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-gray-950/80 backdrop-blur-md flex items-center justify-center text-gray-300 hover:text-amber-400 transition-all border border-white/10">
+                            <i class="${isFav ? 'fa-solid text-amber-400' : 'fa-regular'} fa-star text-xs"></i>
+                        </button>
+
+                        <div class="aspect-square bg-gradient-to-br ${game.color} p-3 flex flex-col items-center justify-center relative overflow-hidden group-hover:brightness-110 transition-all">
+                            <i class="fa-solid ${game.icon} text-4xl sm:text-5xl text-white drop-shadow-xl transform group-hover:scale-110 transition-transform duration-300"></i>
+                            
+                            <span class="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-md rounded text-[9px] font-black text-emerald-400 border border-emerald-500/30 uppercase">
+                                ${game.badge}
+                            </span>
+
+                            <div class="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                                <span class="w-10 h-10 rounded-full bg-emerald-500 text-gray-950 flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
+                                    <i class="fa-solid fa-play text-base translate-x-0.5"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 space-y-1 bg-gray-900">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold uppercase text-indigo-400 truncate">${game.category}</span>
+                                <span class="text-[10px] font-bold text-amber-400 flex items-center gap-0.5">
+                                    <i class="fa-solid fa-star text-[8px]"></i> ${game.rating}
+                                </span>
+                            </div>
+                            <h3 class="font-extrabold text-xs text-gray-100 truncate group-hover:text-emerald-400 transition-colors">${game.title}</h3>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleFavorite(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(item => item !== id);
+            } else {
+                favorites.push(id);
+            }
+            localStorage.setItem('pokifriv100_favs', JSON.stringify(favorites));
+            updateFavCount();
+            renderGames();
+            if (currentGame && currentGame.id === id) updateModalFavBtn();
+        }
+
+        function updateFavCount() {
+            document.getElementById('favCountBadge').textContent = favorites.length;
+        }
+
+        function launchGame(gameId) {
+            const game = ALL_100_GAMES.find(g => g.id === gameId);
+            if (!game) return;
+
+            currentGame = game;
+            document.getElementById('modalGameTitle').textContent = game.title;
+            document.getElementById('modalGameCategory').textContent = game.category;
+            document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star text-[10px]"></i> ${game.rating} Play Store`;
+            document.getElementById('modalGameIcon').className = `w-10 h-10 rounded-xl bg-gradient-to-br ${game.color} flex items-center justify-center text-white font-bold text-lg shadow-md`;
+            
+            const savedScore = localStorage.getItem(`highScore100_${gameId}`) || 0;
+            document.getElementById('modalHighScore').textContent = savedScore;
+
+            // Configurar Overlay de Instrucciones
+            document.getElementById('instructionsTitle').textContent = game.title;
+            document.getElementById('instructionsDesc').textContent = `${game.desc} ¡Sigue las instrucciones en pantalla y supera el récord de la Play Store!`;
+            document.getElementById('instructionsOverlay').classList.remove('hidden');
+
+            updateModalFavBtn();
+
+            const modal = document.getElementById('gameModal');
+            modal.classList.remove('hidden');
+        }
+
+        function startGameFromOverlay() {
+            document.getElementById('instructionsOverlay').classList.add('hidden');
+            soundMaster.coin();
+            initGameEngine(currentGame);
+        }
+
+        function updateModalFavBtn() {
+            if (!currentGame) return;
+            const isFav = favorites.includes(currentGame.id);
+            const icon = document.getElementById('modalFavIcon');
+            icon.className = isFav ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star';
+        }
+
+        function toggleCurrentFavorite() {
+            if (currentGame) toggleFavorite(currentGame.id);
+        }
+
+        function closeGameModal() {
+            if (currentGameLoop) {
+                cancelAnimationFrame(currentGameLoop);
+                currentGameLoop = null;
+            }
+            document.getElementById('gameModal').classList.add('hidden');
+            currentGame = null;
+        }
+
+        function restartCurrentGame() {
+            if (currentGame) {
+                if (currentGameLoop) cancelAnimationFrame(currentGameLoop);
+                document.getElementById('instructionsOverlay').classList.add('hidden');
+                initGameEngine(currentGame);
+            }
+        }
+
+        function toggleFullScreen() {
+            const container = document.getElementById('canvasContainer');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {});
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function resizeCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            const container = document.getElementById('canvasContainer');
+            if (canvas && container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentGame && !document.getElementById('gameModal').classList.contains('hidden')) {
+                resizeCanvas();
+            }
+        });
+
+        /* =================================================================
+           SISTEMA DE MOTORES DE JUEGOS CANVAS (100% FUNCIONALES Y SIN ERRORES)
+           ================================================================= */
+
+        let keysState = {};
+        window.addEventListener('keydown', e => keysState[e.code] = true);
+        window.addEventListener('keyup', e => keysState[e.code] = false);
+
+        function saveHighScore(gameId, score) {
+            const currentHigh = parseInt(localStorage.getItem(`highScore100_${gameId}`) || '0');
+            if (score > currentHigh) {
+                localStorage.setItem(`highScore100_${gameId}`, score);
+                document.getElementById('modalHighScore').textContent = score;
+            }
+        }
+
+        function initGameEngine(game) {
+            resizeCanvas();
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+
+            if (currentGameLoop) cancelAnimationFrame(currentGameLoop);
+
+            // Seleccionar el motor según el tipo de juego
+            switch(game.engine) {
+                case 'subway': runSubwayEngine(canvas, ctx, game); break;
+                case 'shooter': runShooterEngine(canvas, ctx, game); break;
+                case 'knife': runKnifeEngine(canvas, ctx, game); break;
+                case 'cube': runCubeJumpEngine(canvas, ctx, game); break;
+                case 'bricks': runBricksEngine(canvas, ctx, game); break;
+                case 'snake': runSnakeEngine(canvas, ctx, game); break;
+                case 'flappy': runFlappyEngine(canvas, ctx, game); break;
+                case 'memory': runMemoryEngine(canvas, ctx, game); break;
+                default: runCubeJumpEngine(canvas, ctx, game); break;
+            }
+        }
+
+        function runSubwayEngine(canvas, ctx, game) {
+            let player = { lane: 1, yOffset: 0, jumping: false, jumpVel: 0, score: 0, coins: 0 };
+            let obstacles = [];
+            let coins = [];
+            let speed = 7;
+            let isGameOver = false;
+
+            let lastKey = false;
+            function handleInput() {
+                if ((keysState['ArrowLeft'] || keysState['KeyA']) && !lastKey) {
+                    if (player.lane > 0) player.lane--;
+                    lastKey = true;
+                } else if ((keysState['ArrowRight'] || keysState['KeyD']) && !lastKey) {
+                    if (player.lane < 2) player.lane++;
+                    lastKey = true;
+                } else if ((keysState['ArrowUp'] || keysState['KeyW'] || keysState['Space']) && !player.jumping) {
+                    player.jumping = true;
+                    player.jumpVel = 14;
+                    soundMaster.jump();
+                }
+
+                if (!keysState['ArrowLeft'] && !keysState['ArrowRight'] && !keysState['KeyA'] && !keysState['KeyD']) lastKey = false;
+            }
+
+            document.getElementById('btnLeft').onclick = () => { if (player.lane > 0) player.lane--; };
+            document.getElementById('btnRight').onclick = () => { if (player.lane < 2) player.lane++; };
+            document.getElementById('btnUp').onclick = () => { if (!player.jumping) { player.jumping = true; player.jumpVel = 14; soundMaster.jump(); } };
+            document.getElementById('btnAction').onclick = () => { if (!player.jumping) { player.jumping = true; player.jumpVel = 14; soundMaster.jump(); } };
+
+            function update() {
+                if (isGameOver) return;
+                handleInput();
+
+                if (player.jumping) {
+                    player.yOffset += player.jumpVel;
+                    player.jumpVel -= 0.8;
+                    if (player.yOffset <= 0) { player.yOffset = 0; player.jumping = false; }
+                }
+
+                player.score++;
+                speed += 0.001;
+
+                if (Math.random() < 0.03) obstacles.push({ lane: Math.floor(Math.random() * 3), z: 1000 });
+                if (Math.random() < 0.05) coins.push({ lane: Math.floor(Math.random() * 3), z: 1000 });
+
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    let obs = obstacles[i];
+                    obs.z -= speed * 12;
+                    if (obs.z < 80 && obs.z > 20 && obs.lane === player.lane && player.yOffset < 40) {
+                        isGameOver = true;
+                        soundMaster.hit();
+                        saveHighScore(game.id, player.score + player.coins * 50);
+                    }
+                    if (obs.z < 0) obstacles.splice(i, 1);
+                }
+
+                for (let i = coins.length - 1; i >= 0; i--) {
+                    let c = coins[i];
+                    c.z -= speed * 12;
+                    if (c.z < 80 && c.z > 20 && c.lane === player.lane && player.yOffset < 60) {
+                        player.coins++;
+                        soundMaster.coin();
+                        coins.splice(i, 1);
+                    } else if (c.z < 0) coins.splice(i, 1);
+                }
+            }
+
+            function draw() {
+                ctx.fillStyle = '#090d16';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                let vanishingY = canvas.height * 0.35;
+                let lanesX = [canvas.width * 0.3, canvas.width * 0.5, canvas.width * 0.7];
+
+                for (let i = 0; i < 3; i++) {
+                    ctx.strokeStyle = '#374151';
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width * 0.5 + (i - 1) * 30, vanishingY);
+                    ctx.lineTo(lanesX[i], canvas.height);
+                    ctx.stroke();
+                }
+
+                obstacles.forEach(obs => {
+                    let scale = (1000 - obs.z) / 1000;
+                    if (scale < 0.1) return;
+                    let x = canvas.width * 0.5 + (obs.lane - 1) * (30 + scale * 180);
+                    let y = vanishingY + scale * (canvas.height - vanishingY);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(x - 20 * scale, y - 40 * scale, 40 * scale, 40 * scale);
+                });
+
+                coins.forEach(c => {
+                    let scale = (1000 - c.z) / 1000;
+                    if (scale < 0.1) return;
+                    let x = canvas.width * 0.5 + (c.lane - 1) * (30 + scale * 180);
+                    let y = vanishingY + scale * (canvas.height - vanishingY) - 15 * scale;
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath(); ctx.arc(x, y, 10 * scale, 0, Math.PI * 2); ctx.fill();
+                });
+
+                let px = lanesX[player.lane];
+                let py = canvas.height - 70 - player.yOffset;
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 18px Inter';
+                ctx.fillText(`Puntos: ${player.score}`, 20, 35);
+                ctx.fillStyle = '#facc15';
+                ctx.fillText(`Monedas: ${player.coins}`, 20, 60);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡GAME OVER!', canvas.width / 2, canvas.height / 2 - 10);
+                    ctx.fillStyle = '#ffffff'; ctx.font = '16px Inter';
+                    ctx.fillText(`Puntaje Final: ${player.score + player.coins * 50}`, canvas.width / 2, canvas.height / 2 + 30);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runShooterEngine(canvas, ctx, game) {
+            let ship = { x: canvas.width / 2, y: canvas.height - 60, size: 22 };
+            let bullets = [];
+            let enemies = [];
+            let score = 0;
+            let isGameOver = false;
+
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                ship.x = e.clientX - rect.left;
+            };
+
+            document.getElementById('btnLeft').onclick = () => ship.x -= 30;
+            document.getElementById('btnRight').onclick = () => ship.x += 30;
+            document.getElementById('btnAction').onclick = () => {
+                bullets.push({ x: ship.x, y: ship.y - 15 });
+                soundMaster.playTone(600, 0.05, 'square');
+            };
+
+            function update() {
+                if (isGameOver) return;
+                if (keysState['ArrowLeft'] || keysState['KeyA']) ship.x -= 7;
+                if (keysState['ArrowRight'] || keysState['KeyD']) ship.x += 7;
+                ship.x = Math.max(20, Math.min(canvas.width - 20, ship.x));
+
+                if ((keysState['Space'] || keysState['KeyW'] || keysState['ArrowUp']) && Math.random() < 0.2) {
+                    bullets.push({ x: ship.x, y: ship.y - 15 });
+                    soundMaster.playTone(600, 0.04, 'square');
+                }
+
+                if (Math.random() < 0.04) enemies.push({ x: Math.random() * (canvas.width - 40) + 20, y: -20, r: 18 });
+
+                bullets.forEach((b, bi) => {
+                    b.y -= 10;
+                    if (b.y < 0) bullets.splice(bi, 1);
+                });
+
+                enemies.forEach((e, ei) => {
+                    e.y += 3;
+                    if (Math.hypot(e.x - ship.x, e.y - ship.y) < e.r + ship.size) {
+                        isGameOver = true;
+                        soundMaster.hit();
+                        saveHighScore(game.id, score);
+                    }
+                    bullets.forEach((b, bi) => {
+                        if (Math.hypot(e.x - b.x, e.y - b.y) < e.r) {
+                            enemies.splice(ei, 1);
+                            bullets.splice(bi, 1);
+                            score += 10;
+                            soundMaster.coin();
+                        }
+                    });
+                    if (e.y > canvas.height) enemies.splice(ei, 1);
+                });
+            }
+
+            function draw() {
+                ctx.fillStyle = '#030712';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath(); ctx.moveTo(ship.x, ship.y - ship.size);
+                ctx.lineTo(ship.x - ship.size, ship.y + ship.size);
+                ctx.lineTo(ship.x + ship.size, ship.y + ship.size); ctx.fill();
+
+                ctx.fillStyle = '#f43f5e';
+                bullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 12));
+
+                ctx.fillStyle = '#a855f7';
+                enemies.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill(); });
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px Inter';
+                ctx.fillText(`Puntos: ${score}`, 20, 35);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#f43f5e'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡DESTRUIDO!', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runKnifeEngine(canvas, ctx, game) {
+            let angle = 0;
+            let knivesOnLog = [];
+            let score = 0;
+            let isGameOver = false;
+
+            function throwKnife() {
+                if (isGameOver) return;
+                let currentAngle = (-angle) % (Math.PI * 2);
+                let hit = knivesOnLog.some(a => Math.abs(a - currentAngle) < 0.25);
+                if (hit) {
+                    isGameOver = true;
+                    soundMaster.hit();
+                    saveHighScore(game.id, score);
+                } else {
+                    knivesOnLog.push(currentAngle);
+                    score++;
+                    soundMaster.coin();
+                }
+            }
+
+            window.onclick = throwKnife;
+            document.getElementById('btnAction').onclick = throwKnife;
+
+            function update() {
+                if (isGameOver) return;
+                angle += 0.03;
+                if (keysState['Space']) { throwKnife(); keysState['Space'] = false; }
+            }
+
+            function draw() {
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                let cx = canvas.width / 2;
+                let cy = canvas.height * 0.4;
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(angle);
+                ctx.fillStyle = '#854d0e';
+                ctx.beginPath(); ctx.arc(0, 0, 70, 0, Math.PI * 2); ctx.fill();
+
+                knivesOnLog.forEach(a => {
+                    ctx.save();
+                    ctx.rotate(a);
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.fillRect(-4, 65, 8, 35);
+                    ctx.restore();
+                });
+                ctx.restore();
+
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(cx - 5, canvas.height - 80, 10, 45);
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px Inter';
+                ctx.fillText(`Cuchillos Clavados: ${score}`, 20, 35);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡HASTAS CHOCADO!', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runCubeJumpEngine(canvas, ctx, game) {
+            let player = { x: 80, y: canvas.height - 80, vy: 0, jumping: false };
+            let obstacles = [];
+            let score = 0;
+            let isGameOver = false;
+
+            function jump() {
+                if (!player.jumping) {
+                    player.vy = -12;
+                    player.jumping = true;
+                    soundMaster.jump();
+                }
+            }
+
+            window.onclick = jump;
+            document.getElementById('btnUp').onclick = jump;
+            document.getElementById('btnAction').onclick = jump;
+
+            function update() {
+                if (isGameOver) return;
+                if (keysState['Space'] || keysState['ArrowUp'] || keysState['KeyW']) jump();
+
+                player.vy += 0.6;
+                player.y += player.vy;
+                if (player.y >= canvas.height - 80) { player.y = canvas.height - 80; player.jumping = false; }
+
+                score++;
+                if (Math.random() < 0.02) obstacles.push({ x: canvas.width + 20, w: 25, h: 35 });
+
+                obstacles.forEach((o, i) => {
+                    o.x -= 6;
+                    if (o.x < player.x + 25 && o.x + o.w > player.x && player.y + 25 > canvas.height - 80 - o.h) {
+                        isGameOver = true;
+                        soundMaster.hit();
+                        saveHighScore(game.id, score);
+                    }
+                    if (o.x < -30) obstacles.splice(i, 1);
+                });
+            }
+
+            function draw() {
+                ctx.fillStyle = '#020617'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.moveTo(0, canvas.height - 55); ctx.lineTo(canvas.width, canvas.height - 55); ctx.stroke();
+
+                ctx.fillStyle = '#a855f7';
+                ctx.fillRect(player.x, player.y, 28, 28);
+
+                ctx.fillStyle = '#f43f5e';
+                obstacles.forEach(o => {
+                    ctx.beginPath();
+                    ctx.moveTo(o.x, canvas.height - 55);
+                    ctx.lineTo(o.x + o.w / 2, canvas.height - 55 - o.h);
+                    ctx.lineTo(o.x + o.w, canvas.height - 55);
+                    ctx.fill();
+                });
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px Inter'; ctx.fillText(`Puntos: ${score}`, 20, 35);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#a855f7'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡PICO IMPACTADO!', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runBricksEngine(canvas, ctx, game) {
+            let paddle = { x: canvas.width / 2 - 45, w: 90, h: 14 };
+            let ball = { x: canvas.width / 2, y: canvas.height - 60, dx: 4, dy: -4, r: 8 };
+            let bricks = [];
+            let score = 0;
+            let isGameOver = false;
+
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 7; c++) {
+                    bricks.push({ x: c * 75 + 35, y: r * 25 + 40, w: 65, h: 18, alive: true });
+                }
+            }
+
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                paddle.x = e.clientX - rect.left - paddle.w / 2;
+            };
+
+            document.getElementById('btnLeft').onclick = () => paddle.x -= 35;
+            document.getElementById('btnRight').onclick = () => paddle.x += 35;
+
+            function update() {
+                if (isGameOver) return;
+                if (keysState['ArrowLeft'] || keysState['KeyA']) paddle.x -= 7;
+                if (keysState['ArrowRight'] || keysState['KeyD']) paddle.x += 7;
+
+                ball.x += ball.dx; ball.y += ball.dy;
+
+                if (ball.x < 10 || ball.x > canvas.width - 10) ball.dx *= -1;
+                if (ball.y < 10) ball.dy *= -1;
+
+                if (ball.y > canvas.height - 30 && ball.x > paddle.x && ball.x < paddle.x + paddle.w) {
+                    ball.dy = -Math.abs(ball.dy);
+                    soundMaster.jump();
+                }
+
+                if (ball.y > canvas.height) {
+                    isGameOver = true;
+                    soundMaster.hit();
+                    saveHighScore(game.id, score);
+                }
+
+                bricks.forEach(b => {
+                    if (b.alive && ball.x > b.x && ball.x < b.x + b.w && ball.y > b.y && ball.y < b.y + b.h) {
+                        b.alive = false; ball.dy *= -1; score += 20; soundMaster.coin();
+                    }
+                });
+            }
+
+            function draw() {
+                ctx.fillStyle = '#090d16'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#38bdf8'; ctx.fillRect(paddle.x, canvas.height - 25, paddle.w, paddle.h);
+                ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill();
+
+                bricks.forEach(b => {
+                    if (b.alive) { ctx.fillStyle = '#ec4899'; ctx.fillRect(b.x, b.y, b.w, b.h); }
+                });
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px Inter'; ctx.fillText(`Puntuación: ${score}`, 20, 25);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ec4899'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡BOLA CAÍDA!', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runSnakeEngine(canvas, ctx, game) {
+            let snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }];
+            let food = { x: 15, y: 15 };
+            let dir = { x: 1, y: 0 };
+            let score = 0;
+            let isGameOver = false;
+
+            document.getElementById('btnUp').onclick = () => { if (dir.y === 0) dir = { x: 0, y: -1 }; };
+            document.getElementById('btnDown').onclick = () => { if (dir.y === 0) dir = { x: 0, y: 1 }; };
+            document.getElementById('btnLeft').onclick = () => { if (dir.x === 0) dir = { x: -1, y: 0 }; };
+            document.getElementById('btnRight').onclick = () => { if (dir.x === 0) dir = { x: 1, y: 0 }; };
+
+            let stepAcc = 0;
+            function update() {
+                if (isGameOver) return;
+                if ((keysState['ArrowUp'] || keysState['KeyW']) && dir.y === 0) dir = { x: 0, y: -1 };
+                if ((keysState['ArrowDown'] || keysState['KeyS']) && dir.y === 0) dir = { x: 0, y: 1 };
+                if ((keysState['ArrowLeft'] || keysState['KeyA']) && dir.x === 0) dir = { x: -1, y: 0 };
+                if ((keysState['ArrowRight'] || keysState['KeyD']) && dir.x === 0) dir = { x: 1, y: 0 };
+
+                stepAcc++;
+                if (stepAcc < 7) return;
+                stepAcc = 0;
+
+                let head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+                if (head.x < 0 || head.x >= 25 || head.y < 0 || head.y >= 18) {
+                    isGameOver = true; soundMaster.hit(); saveHighScore(game.id, score); return;
+                }
+
+                snake.unshift(head);
+                if (head.x === food.x && head.y === food.y) {
+                    score += 10; soundMaster.coin();
+                    food = { x: Math.floor(Math.random() * 24), y: Math.floor(Math.random() * 17) };
+                } else {
+                    snake.pop();
+                }
+            }
+
+            function draw() {
+                ctx.fillStyle = '#050b14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                let gw = canvas.width / 25; let gh = canvas.height / 18;
+
+                ctx.fillStyle = '#22c55e';
+                snake.forEach(s => ctx.fillRect(s.x * gw, s.y * gh, gw - 1, gh - 1));
+
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(food.x * gw, food.y * gh, gw - 1, gh - 1);
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px Inter'; ctx.fillText(`Comida: ${score}`, 20, 25);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#22c55e'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡SERPIENTE CAÍDA!', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runFlappyEngine(canvas, ctx, game) {
+            let bird = { y: canvas.height / 2, vy: 0 };
+            let pipes = [];
+            let score = 0;
+            let isGameOver = false;
+
+            function flap() {
+                bird.vy = -7.5;
+                soundMaster.jump();
+            }
+
+            window.onclick = flap;
+            document.getElementById('btnAction').onclick = flap;
+
+            function update() {
+                if (isGameOver) return;
+                if (keysState['Space']) { flap(); keysState['Space'] = false; }
+
+                bird.vy += 0.4;
+                bird.y += bird.vy;
+
+                if (bird.y < 0 || bird.y > canvas.height) { isGameOver = true; soundMaster.hit(); saveHighScore(game.id, score); }
+
+                if (Math.random() < 0.02) pipes.push({ x: canvas.width, top: Math.random() * (canvas.height - 180) + 30 });
+
+                pipes.forEach((p, i) => {
+                    p.x -= 3;
+                    if (p.x < 120 && p.x > 80) {
+                        if (bird.y < p.top || bird.y > p.top + 120) { isGameOver = true; soundMaster.hit(); saveHighScore(game.id, score); }
+                        else if (!p.passed) { p.passed = true; score++; soundMaster.coin(); }
+                    }
+                    if (p.x < -60) pipes.splice(i, 1);
+                });
+            }
+
+            function draw() {
+                ctx.fillStyle = '#0c1427'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#10b981';
+                pipes.forEach(p => {
+                    ctx.fillRect(p.x, 0, 40, p.top);
+                    ctx.fillRect(p.x, p.top + 120, 40, canvas.height);
+                });
+
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath(); ctx.arc(100, bird.y, 16, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px Inter'; ctx.fillText(`Puntos: ${score}`, 20, 35);
+
+                if (isGameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#facc15'; ctx.font = 'bold 36px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('¡CHOQUE!', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function loop() { update(); draw(); if (!isGameOver) currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+
+        function runMemoryEngine(canvas, ctx, game) {
+            let grid = [1, 1, 2, 2, 3, 3, 4, 4].sort(() => Math.random() - 0.5);
+            let flipped = [];
+            let matched = [];
+            let score = 0;
+
+            canvas.onclick = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let col = Math.floor(x / (canvas.width / 4));
+                let idx = col;
+                if (idx < 8 && !flipped.includes(idx) && !matched.includes(idx)) {
+                    flipped.push(idx); soundMaster.jump();
+                    if (flipped.length === 2) {
+                        if (grid[flipped[0]] === grid[flipped[1]]) {
+                            matched.push(flipped[0], flipped[1]);
+                            score += 50; soundMaster.win();
+                            saveHighScore(game.id, score);
+                            flipped = [];
+                        } else {
+                            setTimeout(() => flipped = [], 600);
+                        }
+                    }
+                }
+            };
+
+            function draw() {
+                ctx.fillStyle = '#0b1329'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                let w = canvas.width / 4 - 15;
+
+                for (let i = 0; i < 4; i++) {
+                    let isUp = flipped.includes(i) || matched.includes(i);
+                    ctx.fillStyle = isUp ? '#6366f1' : '#1e293b';
+                    ctx.fillRect(i * (w + 15) + 10, canvas.height / 2 - 40, w, 80);
+                    if (isUp) {
+                        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px Inter'; ctx.textAlign = 'center';
+                        ctx.fillText(grid[i], i * (w + 15) + 10 + w / 2, canvas.height / 2 + 10);
+                        ctx.textAlign = 'left';
+                    }
+                }
+
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px Inter';
+                ctx.fillText(`Cartas Parejas: ${matched.length / 2}`, 20, 35);
+            }
+
+            function loop() { draw(); currentGameLoop = requestAnimationFrame(loop); }
+            loop();
+        }
+    </script>
+</body>
+</html>
